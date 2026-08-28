@@ -452,7 +452,12 @@ The following valid baseline configuration blocks the test designer from writes 
 // probity.config.ts
 import { defineConfig, type Rule } from '@nizos/probity'
 
-const productionPath = /\/(src|app|lib)\//
+// Scoped to this project's actual source roots (src/clj, src/cljs, src/cljc)
+// rather than a bare `src`, since a bare `/\/(src|app|lib)\//` false-positives
+// on any absolute path whose *ambient* checkout location happens to contain
+// `/src/` (e.g. a worktree under `~/src/projects/<repo>/...`), which would
+// incorrectly block writes to unrelated files like `.ai/test-plan.md`.
+const productionPath = /\/(src\/(clj|cljs|cljc)|app|lib)\//
 const allowedTestPath = /\/(test|tests|spec|specs|test-support|fixtures)\//
 const testFilename = /(?:^|\/)[^/]+(?:_test|\.test|\.spec)\.[^/]+$/
 
