@@ -17,6 +17,7 @@
                  [luminus-undertow "0.1.18"]
                  [luminus/ring-ttl-session "0.3.3"]
                  [markdown-clj "1.11.3"]
+                 [metosin/jsonista "0.3.5"]
                  [metosin/muuntaja "0.6.8"]
                  [metosin/reitit "0.5.18"]
                  [metosin/ring-http-response "0.9.3"]

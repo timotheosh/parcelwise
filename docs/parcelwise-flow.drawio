@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-29T12:00:00Z" agent="flow-documenter" version="24.0.0" type="device">
+  <diagram id="parcelwise-e2e" name="End-to-End Quote Flow">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4200" pageHeight="2150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="e2e_title" value="Parcelwise -- Shipping Quote Flow (End-to-End, final approved implementation)&lt;br&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#666666&quot;&gt;Reagent form submission through POST /api/quotes, the domain pipeline, and back to the rendered UI. The concrete carrier adapter (FakeCarrier or ShippoCarrier) is selected once at app startup -- see the &quot;Provider Selection &amp; Carrier Adapters&quot; tab for that decision and the Shippo adapter's internal sub-flow.&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="-100" width="1500" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Group backgrounds -->
+        <mxCell id="e2e_g_frontend_submit" value="Browser (ClojureScript / Reagent) -- parcelwise.quotes.{state,logic,api} + views.cljs -- request submission" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="0" width="1450" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_g_backend_http" value="Server (Clojure) -- parcelwise.http.{quotes-handler,json-boundary,error-mapping} + middleware.clj -- per-request HTTP boundary" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="195" width="2030" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_g_backend_service" value="Server (Clojure) -- parcelwise.quotes.service + parcelwise.domain.{calculations,quote-engine} + carrier boundary -- per-request orchestration" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="720" width="2280" height="710" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_g_frontend_response" value="Browser (ClojureScript / Reagent) -- parcelwise.quotes.{logic,api,views} -- response handling and rendered UI states" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1480" width="1400" height="480" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 1: Frontend submit ============================ -->
+        <mxCell id="e2e_f_state" value="quotes/state.cljs&lt;br&gt;initial-state / state atom&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Data] :phase :form, :form {origin,&lt;br&gt;destination, parcel} (spec 10.1)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_f_submit" value="views.cljs on-submit&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] user clicks &quot;Get shipping&lt;br&gt;quotes&quot; -- externally triggered&lt;br&gt;entry point&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="230" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_f_apipost" value="api/submit-quote-request!&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] ajax.core POST&lt;br&gt;/api/quotes (plain JSON, spec 9.1)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="610" y="20" width="250" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_f_buildreq" value="logic/build-request&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] form -&gt; nested&lt;br&gt;camelCase wire-shape body&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="920" y="20" width="230" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_f_startloading" value="logic/start-loading&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] :phase -&gt; :loading,&lt;br&gt;clears stale errors (AC8)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="20" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_ef1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_f_state" target="e2e_f_submit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ef2" value="form values" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_f_submit" target="e2e_f_apipost">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ef3" value="swap! start-loading" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;exitX=0.5;exitY=1;entryX=0.25;entryY=1;" edge="1" parent="1" source="e2e_f_apipost" target="e2e_f_startloading">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ef4" value="build-request(form)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_f_apipost" target="e2e_f_buildreq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ef5" value="state now :loading" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;dashed=1;fontSize=9;fontColor=#999999;strokeColor=#999999;exitX=0.25;exitY=0;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_f_startloading" target="e2e_f_state">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1320" y="-30" as="sourcePoint" />
+            <mxPoint x="150" y="-30" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================ Band 2: Backend HTTP entry, guard, decode, validate ============================ -->
+        <mxCell id="e2e_b_entry" value="POST /api/quotes&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;externally callable entry point&lt;br&gt;Content-Type: application/json&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="210" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_bodylimit" value="wrap-body-size-limit&lt;br&gt;middleware.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] enforces limit against&lt;br&gt;actual bytes read, not just&lt;br&gt;Content-Length (spec 12)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="310" y="220" width="250" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_sizedec" value="bytes ≤ 1 MiB?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="235" width="150" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_handler" value="quotes-handler/handler&lt;br&gt;quotes_handler.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] thin ring request/&lt;br&gt;response wrapper, bound to&lt;br&gt;carrier-adapter + provider&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="830" y="220" width="240" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_decode" value="json-boundary/decode-quote-request&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] camelCase JSON -&gt;&lt;br&gt;kebab-case; decimal strings -&gt;&lt;br&gt;BigDecimal (unparseable values&lt;br&gt;pass through unchanged so the&lt;br&gt;spec rejects them downstream)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="215" width="280" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_domainreq" value="domain quote-request&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;kebab-case keys, BigDecimal&lt;br&gt;parcel fields where parseable&lt;br&gt;(spec 6.2, 6.4, 13.2)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="235" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_validdec" value="s/explain-data&#10;::specs/quote-request&#10;nil (valid)?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="225" width="170" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_413" value="413 Request Entity Too Large&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{&quot;error&quot;:{&quot;code&quot;:&quot;request-too-large&quot;,&lt;br&gt;&quot;message&quot;:...}} -- JSON-encoded via&lt;br&gt;the shared muuntaja codec, since this&lt;br&gt;short-circuit runs outside the /api&lt;br&gt;group's format-response middleware&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="580" y="420" width="270" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_fielderrors" value="error-mapping/field-errors&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] explain-data -&gt;&lt;br&gt;{camelCase.path [msgs...]}&lt;br&gt;(spec 9.2, AC2 -- all problems&lt;br&gt;from one pass, in one response)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="420" width="270" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_400" value="400 Bad Request&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{&quot;error&quot;:{&quot;code&quot;:&quot;invalid-request&quot;,&lt;br&gt;&quot;message&quot;:...,&quot;fields&quot;:{...}}}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="580" width="280" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_eb1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_entry" target="e2e_b_bodylimit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_bodylimit" target="e2e_b_sizedec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb3" value="no (exceeds limit)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_b_sizedec" target="e2e_b_413">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb4" value="yes -- fresh bounded byte stream" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_sizedec" target="e2e_b_handler">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb5" value=":body-params (already&#10;muuntaja-decoded JSON)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_handler" target="e2e_b_decode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_decode" target="e2e_b_domainreq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_domainreq" target="e2e_b_validdec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb8" value="invalid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_b_validdec" target="e2e_b_fielderrors">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_fielderrors" target="e2e_b_400">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_ecross1" value="HTTP POST /api/quotes (JSON body, over the network)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=10;fontColor=#333333;strokeColor=#333333;" edge="1" parent="1" source="e2e_f_buildreq" target="e2e_b_entry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 3: service orchestration + carrier boundary ============================ -->
+        <mxCell id="e2e_b_service" value="quotes.service/get-quotes&lt;br&gt;service.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] orchestrator -- calls the&lt;br&gt;injected carrier adapter, then&lt;br&gt;delegates business decisions to&lt;br&gt;the pure domain pipeline&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="750" width="260" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_weight" value="calculations/dimensional-weight-kg&#10;+ billable-weight-kg&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] (spec 7.1/7.2)&lt;br&gt;(L x W x H) / divisor, then&lt;br&gt;max(actual, dimensional)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2070" y="750" width="260" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_fetchrates" value="protocol/fetch-rates&lt;br&gt;CarrierAdapter&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[external-system boundary]&lt;br&gt;concrete adapter chosen once&lt;br&gt;at app startup (see other tab)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2380" y="750" width="260" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_carrierresult" value="::carrier-result&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{:status :ok :rates [...]} or&lt;br&gt;{:status :error :error-type &lt;kind&gt;}&lt;br&gt;(shared error-type enum, spec 8)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2700" y="760" width="250" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_statusdec" value=":status?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3010" y="775" width="150" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_note_provider" value="Concrete adapter (FakeCarrier or ShippoCarrier)&lt;br&gt;selected once at application startup by&lt;br&gt;decide-provider / carrier-adapter-for-provider --&lt;br&gt;see the &quot;Provider Selection &amp; Carrier Adapters&quot;&lt;br&gt;tab for that decision and the Shippo adapter's&lt;br&gt;internal request/HTTP/response sub-flow." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=11;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="2380" y="900" width="340" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_eb10" value="valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_validdec" target="e2e_b_service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb11" value="parcel dims/weight" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_service" target="e2e_b_weight">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb12" value="quote-request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_service" target="e2e_b_fetchrates">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_fetchrates" target="e2e_b_carrierresult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_carrierresult" target="e2e_b_statusdec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_en_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="e2e_b_fetchrates" target="e2e_note_provider">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 4: success pipeline ============================ -->
+        <mxCell id="e2e_b_filter" value="filter-valid-rates&lt;br&gt;quote-engine.clj" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2700" y="1000" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_normalize" value="normalize-rate&lt;br&gt;quote-engine.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;stamps :provider,&lt;br&gt;:billable-weight-kg&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2950" y="1000" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_order" value="order-quotes&lt;br&gt;quote-engine.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;5-key sort (spec 7.5)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3200" y="1000" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_encode" value="json-boundary/encode-quote-response&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] BigDecimal -&gt; plain&lt;br&gt;decimal string, kebab -&gt; camelCase&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3450" y="995" width="260" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_200" value="200 OK&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{&quot;quotes&quot;:[...]} -- empty array&lt;br&gt;(not nil/absent) when none (AC7/9.5)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0b8299;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3760" y="985" width="230" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_eb15" value=":ok -&gt; :rates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_b_statusdec" target="e2e_b_filter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb16" value="valid raw rates (AC5 --&#10;malformed rows silently dropped)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_filter" target="e2e_b_normalize">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb17" value="merge context&#10;{billable-weight-kg, provider}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#666666;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_b_weight" target="e2e_b_normalize">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_normalize" target="e2e_b_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_order" target="e2e_b_encode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="e2e_b_encode" target="e2e_b_200">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 4b: error terminals ============================ -->
+        <mxCell id="e2e_b_timeoutdec" value="error-type&#10;= :timeout?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3010" y="1150" width="160" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_504" value="504 Gateway Timeout&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{&quot;error&quot;:{&quot;code&quot;:&quot;carrier-timeout&quot;,&lt;br&gt;&quot;message&quot;:...}} (spec 9.4)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2990" y="1300" width="250" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_b_502" value="502 Bad Gateway&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;{&quot;error&quot;:{&quot;code&quot;:&quot;carrier-unavailable&quot;,&lt;br&gt;&quot;message&quot;:...}} (spec 9.3) -- every&lt;br&gt;other error-type collapses here;&lt;br&gt;raw carrier details never exposed (spec 12)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="3280" y="1300" width="290" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_eb21" value=":error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;exitX=0.65;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2e_b_statusdec" target="e2e_b_timeoutdec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb22" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_timeoutdec" target="e2e_b_504">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb23" value="no (auth-failure, rate-limited,&#10;validation-error, upstream-error)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_b_timeoutdec" target="e2e_b_502">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Data-contracts note ============================ -->
+        <mxCell id="e2e_note_contracts" value="parcelwise.specs  [Data / contracts]&lt;br&gt;&lt;br&gt;::quote-request, ::normalized-quote,&lt;br&gt;::carrier-result, ::error-type -- shared&lt;br&gt;vocabulary across the HTTP layer,&lt;br&gt;quotes.service, and both carrier adapters.&lt;br&gt;&lt;br&gt;Wire boundary (json_boundary.clj):&lt;br&gt;request: camelCase JSON, decimal fields as&lt;br&gt;strings -&gt; kebab-case + BigDecimal.&lt;br&gt;response: the reverse (spec 6.2, 6.4, 9.1, 13.2).&lt;br&gt;&lt;br&gt;::error-type enum: :timeout | :auth-failure |&lt;br&gt;:rate-limited | :validation-error |&lt;br&gt;:upstream-error -- produced identically by&lt;br&gt;FakeCarrier and ShippoCarrier. Only :timeout&lt;br&gt;is distinguished at the HTTP boundary (-&gt; 504);&lt;br&gt;everything else collapses to 502 (spec 9.3/9.4/12)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=12;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="900" width="540" height="380" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_en_c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="e2e_note_contracts" target="e2e_b_domainreq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_en_c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="e2e_note_contracts" target="e2e_b_carrierresult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_en_c3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="e2e_note_contracts" target="e2e_b_encode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 5: frontend response handling ============================ -->
+        <mxCell id="e2e_fr_handlers" value="api.cljs ajax :handler / :error-handler&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] dispatches on HTTP status --&lt;br&gt;2xx -&gt; :handler, else -&gt; :error-handler&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1500" width="300" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_decodesuccess" value="logic/decode-success&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] non-empty :quotes -&gt;&lt;br&gt;:results; empty -&gt; :empty (server&lt;br&gt;order preserved, never re-sorted, AC7)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1500" width="270" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_decodeerror" value="logic/decode-error&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] 400 + usable fields -&gt;&lt;br&gt;:form phase w/ field-errors; else&lt;br&gt;(502/504/malformed body) -&gt; :error&lt;br&gt;phase (spec 10.5, AC9)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1660" width="270" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_ecross2" value="200 (over the network)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#333333;strokeColor=#333333;" edge="1" parent="1" source="e2e_b_200" target="e2e_fr_handlers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ecross3" value="400 (over the network)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#333333;strokeColor=#333333;" edge="1" parent="1" source="e2e_b_400" target="e2e_fr_handlers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ecross4" value="502 (over the network)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#333333;strokeColor=#333333;" edge="1" parent="1" source="e2e_b_502" target="e2e_fr_handlers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_ecross5" value="504 (over the network)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#333333;strokeColor=#333333;" edge="1" parent="1" source="e2e_b_504" target="e2e_fr_handlers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb24" value="2xx status -&gt; :handler" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_handlers" target="e2e_fr_decodesuccess">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb25" value="non-2xx -&gt; :error-handler" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_handlers" target="e2e_fr_decodeerror">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band 6: frontend UI states ============================ -->
+        <mxCell id="e2e_fr_results" value=":results phase&lt;br&gt;views/results-list&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;renders one quote-card per quote,&lt;br&gt;in the received order (spec 10.3)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0b8299;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1830" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_empty" value=":empty phase&lt;br&gt;views/empty-state&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;&quot;No shipping services are&lt;br&gt;available for this shipment.&quot; (AC7)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1830" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_formerrs" value=":form phase w/ field-errors&lt;br&gt;views/text-field&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;per-field message shown near each&lt;br&gt;input; error summary shown (spec 10.5)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1830" width="260" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_error" value=":error phase&lt;br&gt;views/error-summary&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;shows the human-readable&lt;br&gt;error-message (spec 10.5)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1830" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_fr_focuswatcher" value="views/focus-error-summary-watcher&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] add-watch on state -- moves&lt;br&gt;DOM focus to #error-summary when&lt;br&gt;:focus-error-summary? flips true (AC9)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="1830" width="290" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2e_eb26" value="quotes non-empty" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_decodesuccess" target="e2e_fr_results">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb27" value="quotes empty" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_decodesuccess" target="e2e_fr_empty">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb28" value="400 w/ usable :fields" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_decodeerror" target="e2e_fr_formerrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb29" value="else (502/504/malformed)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="e2e_fr_decodeerror" target="e2e_fr_error">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb30" value="sets :focus-error-summary? true" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" parent="1" source="e2e_fr_formerrs" target="e2e_fr_focuswatcher">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2e_eb31" value="sets :focus-error-summary? true" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;dashed=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" parent="1" source="e2e_fr_error" target="e2e_fr_focuswatcher">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="e2e_legend" value="Legend&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;green rectangle&lt;/b&gt; = pure calculation &amp;nbsp;|&amp;nbsp; &lt;b&gt;purple rectangle&lt;/b&gt; = action (I/O-touching) &amp;nbsp;|&amp;nbsp; &lt;b&gt;orange rectangle&lt;/b&gt; = external-system/protocol boundary &amp;nbsp;|&amp;nbsp; &lt;b&gt;blue rounded&lt;/b&gt; = data/value&lt;br&gt;&lt;b&gt;yellow diamond&lt;/b&gt; = decision/branch &amp;nbsp;|&amp;nbsp; &lt;b&gt;red rounded&lt;/b&gt; = error/failure terminal &amp;nbsp;|&amp;nbsp; &lt;b&gt;teal rounded&lt;/b&gt; = success terminal &amp;nbsp;|&amp;nbsp; &lt;b&gt;grey dashed box/lines&lt;/b&gt; = namespace grouping, contract notes, or cross-tab references (not a call edge)&lt;br&gt;&lt;b&gt;solid black dashed edges&lt;/b&gt; = the request/response actually crossing the browser&amp;lt;-&amp;gt;server network boundary&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="1990" width="2280" height="110" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="parcelwise-provider" name="Provider Selection &amp; Carrier Adapters">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2700" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="prov_title" value="Parcelwise -- Shipping Quote Flow (Provider Selection &amp; Carrier Adapters)&lt;br&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#666666&quot;&gt;The CARRIER_PROVIDER startup decision (spec 8.2), and both CarrierAdapter implementations' internal fetch-rates flow. Returns to the &quot;End-to-End Quote Flow&quot; tab's protocol/fetch-rates boundary and ::carrier-result / :status? decision.&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="-90" width="1500" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Group backgrounds -->
+        <mxCell id="prov_g_startup" value="startup/carrier-config.clj + routes/services.clj -- decided ONCE, at application startup (route-registration time)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="0" width="1300" height="550" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_g_fetch" value="CarrierAdapter/fetch-rates -- called PER REQUEST by quotes.service/get-quotes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=8;fontStyle=1;fontSize=13;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="570" width="2500" height="650" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band A: startup decision ============================ -->
+        <mxCell id="prov_env" value="Environment (parcelwise.config/env)&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;:carrier-provider (CARRIER_PROVIDER)&lt;br&gt;:shippo-api-token (SHIPPO_API_TOKEN)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="280" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_decide" value="carrier-config/decide-provider&lt;br&gt;startup/carrier_config.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] depends only on the&lt;br&gt;explicit env arg, does no I/O (spec 8.2)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="20" width="280" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_decdec" value="carrier-provider&#10;value?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="30" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_fakeresult" value="{:provider :fake}&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(default / absent / &quot;fake&quot;)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="960" y="20" width="230" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippotokresult" value="{:provider :shippo :token &quot;...&quot;}&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(&quot;shippo&quot; + non-blank token)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="960" y="140" width="250" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippoerrresult" value="{:error &quot;&lt;fixed, static,&lt;br&gt;secret-free message&gt;&quot;}&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(&quot;shippo&quot; + blank/missing token)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="960" y="260" width="270" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_ea1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="prov_env" target="prov_decide">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ea2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="prov_decide" target="prov_decdec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ea3" value="absent or &quot;fake&quot;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_decdec" target="prov_fakeresult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ea4" value="&quot;shippo&quot; + token present" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_decdec" target="prov_shippotokresult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ea5" value="&quot;shippo&quot; + token blank/missing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_decdec" target="prov_shippoerrresult">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band B: adapter construction ============================ -->
+        <mxCell id="prov_startupfail" value="throw IllegalStateException&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;decide-provider's exact message,&lt;br&gt;never rebuilt/interpolated -- the&lt;br&gt;application fails to start (fail-fast,&lt;br&gt;spec 8.2, CORR-S4-1 fix)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="260" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_adapterfactory" value="carrier-adapter-for-provider&lt;br&gt;routes/services.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action-supporting] consumes&lt;br&gt;decide-provider's full result&lt;br&gt;faithfully (CORR-S4-1 fix)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="420" width="280" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_fakecarrier" value="FakeCarrier&lt;br&gt;carrier/fake.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;scenario: :normal&lt;br&gt;(the only scenario wired live)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="740" y="420" width="230" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippocarrier" value="ShippoCarrier&lt;br&gt;carrier/shippo/adapter.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;{token, base-url=&quot;https://api.&lt;br&gt;goshippo.com&quot;, connect-timeout-ms=5000,&lt;br&gt;request-timeout-ms=10000}&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="420" width="250" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_eb1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_fakeresult" target="prov_adapterfactory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_eb2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippotokresult" target="prov_adapterfactory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_eb3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippoerrresult" target="prov_adapterfactory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_eb4" value=":error key present" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_adapterfactory" target="prov_startupfail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_eb5" value=":provider :fake" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_adapterfactory" target="prov_fakecarrier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_eb6" value=":provider :shippo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_adapterfactory" target="prov_shippocarrier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band C: per-request fetch-rates ============================ -->
+        <mxCell id="prov_fakerates" value="normal-rates&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;4 fixed raw rates,&lt;br&gt;deterministic (spec 8.1)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="740" y="600" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_fakenote" value="fake.clj also supports :malformed-rate&lt;br&gt;and :failure scenarios (exercised by&lt;br&gt;tests, spec 8.1) -- only :normal is&lt;br&gt;wired into the live app above." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="740" y="750" width="270" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_ec_fake" value="fetch-rates(quote-request)&#10;[Calculation -- no I/O]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_fakecarrier" target="prov_fakerates">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippo_map_req" value="mapping/quote-request-&gt;shippo-request&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] address/parcel -&gt;&lt;br&gt;Shippo snake_case; kg-&gt;lb, cm-&gt;in,&lt;br&gt;decimal-&gt;2-decimal wire string&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="600" width="260" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippo_client" value="client/fetch-shipment-rates&lt;br&gt;client.clj&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Action] real java.net.http.HttpClient&lt;br&gt;POST {base-url}/shipments/, explicit&lt;br&gt;connect + request timeouts (spec 8.2)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="590" width="270" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippo_outcomedec" value="2xx&#10;response?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="605" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippo_ok" value="mapping/shippo-response-&gt;raw-rates&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] object_id, provider,&lt;br&gt;servicelevel, amount -&gt; raw-rate&lt;br&gt;shape (surcharge always 0M,&lt;br&gt;available? always true)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="590" width="270" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_shippo_classify" value="mapping/classify-failure&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#666666&quot;&gt;[Calculation] timeout -&gt; :timeout;&lt;br&gt;401/403 -&gt; :auth-failure;&lt;br&gt;400/422 -&gt; :validation-error;&lt;br&gt;429 -&gt; :rate-limited; else&lt;br&gt;(incl. connection failure) -&gt;&lt;br&gt;:upstream-error (safe default)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="750" width="270" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_ec1" value="fetch-rates(quote-request)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippocarrier" target="prov_shippo_map_req">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ec2" value="shippo request body" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippo_map_req" target="prov_shippo_client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ec3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" edge="1" parent="1" source="prov_shippo_client" target="prov_shippo_outcomedec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ec4" value="yes -- parsed JSON body" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippo_outcomedec" target="prov_shippo_ok">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ec5" value="no -- non-2xx status,&#10;timeout, or connection failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippo_outcomedec" target="prov_shippo_classify">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================ Band D: shared contracts + return ============================ -->
+        <mxCell id="prov_rawrate_contract" value="Shared raw-rate shape&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(parcelwise.domain.quote-engine's input,&lt;br&gt;spec 13.4): :id :carrier :service-code&lt;br&gt;:service-name :currency :base-amount&lt;br&gt;:surcharge-amount :total-amount&lt;br&gt;:estimated-days :available? -- both&lt;br&gt;adapters produce this identically.&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=11;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="740" y="940" width="350" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_carrierresult_ok" value="{:status :ok :rates [...]}&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(::carrier-result, spec 8)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="940" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_carrierresult_err" value="{:status :error :error-type &lt;kind&gt;}&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(::carrier-result, spec 8)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="1060" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_returnref" value="Returns as protocol/fetch-rates's&lt;br&gt;result -- flows into the &quot;End-to-End&lt;br&gt;Quote Flow&quot; tab's ::carrier-result&lt;br&gt;/ :status? decision in&lt;br&gt;quotes.service/get-quotes." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=11;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="960" width="300" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prov_ed1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="prov_fakerates" target="prov_rawrate_contract">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="prov_shippo_ok" target="prov_rawrate_contract">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed3" value=":rates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_fakerates" target="prov_carrierresult_ok">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed4" value=":rates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippo_ok" target="prov_carrierresult_ok">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed5" value=":error-type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="prov_shippo_classify" target="prov_carrierresult_err">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="prov_carrierresult_ok" target="prov_returnref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="prov_ed7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;strokeColor=#999999;fontColor=#999999;" edge="1" parent="1" source="prov_carrierresult_err" target="prov_returnref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="prov_legend" value="Legend&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;green rectangle&lt;/b&gt; = pure calculation &amp;nbsp;|&amp;nbsp; &lt;b&gt;purple rectangle&lt;/b&gt; = action (I/O-touching) &amp;nbsp;|&amp;nbsp; &lt;b&gt;orange rectangle&lt;/b&gt; = CarrierAdapter implementation &amp;nbsp;|&amp;nbsp; &lt;b&gt;blue rounded&lt;/b&gt; = data/value&lt;br&gt;&lt;b&gt;yellow diamond&lt;/b&gt; = decision/branch &amp;nbsp;|&amp;nbsp; &lt;b&gt;red rounded&lt;/b&gt; = failure terminal (application fails to start) &amp;nbsp;|&amp;nbsp; &lt;b&gt;grey dashed box/lines&lt;/b&gt; = contract notes and cross-tab references (not a call edge)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1260" width="1600" height="110" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
