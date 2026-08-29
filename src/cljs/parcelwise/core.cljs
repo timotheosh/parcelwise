@@ -4,10 +4,8 @@
     [reagent.dom :as rdom]
     [goog.events :as events]
     [goog.history.EventType :as HistoryEventType]
-    [markdown.core :refer [md->html]]
     [parcelwise.ajax :as ajax]
     [parcelwise.quotes.views :as quotes]
-    [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
     [clojure.string :as string])
   (:import goog.History))
@@ -43,9 +41,7 @@
 
 (defn home-page []
   [:section.section>div.container>div.content
-   [quotes/quotes-page]
-   (when-let [docs (:docs @session)]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+   [quotes/quotes-page]])
 
 (def pages
   {:home #'home-page
@@ -80,15 +76,11 @@
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(swap! session assoc :docs %)}))
-
 (defn ^:dev/after-load mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
   (ajax/load-interceptors!)
-  (fetch-docs!)
   (hook-browser-navigation!)
   (mount-components))
