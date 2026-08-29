@@ -6,6 +6,7 @@
     [goog.history.EventType :as HistoryEventType]
     [markdown.core :refer [md->html]]
     [parcelwise.ajax :as ajax]
+    [parcelwise.quotes.views :as quotes]
     [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
     [clojure.string :as string])
@@ -42,6 +43,7 @@
 
 (defn home-page []
   [:section.section>div.container>div.content
+   [quotes/quotes-page]
    (when-let [docs (:docs @session)]
      [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
 
